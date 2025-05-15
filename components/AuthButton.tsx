@@ -21,6 +21,7 @@ export default function AuthButton() {
   };
 
   const handleLogin = () => {
+    console.log('hello')
     router.push('/login');
   };
 

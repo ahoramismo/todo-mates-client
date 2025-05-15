@@ -5,9 +5,10 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
+import Link from 'next/link';
 
 export default function LoginForm() {
-  const [email, setEmail] = useState('');
+  const [username, setId] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -21,7 +22,7 @@ export default function LoginForm() {
       const res = await fetch('http://localhost:3000/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ username, password }),
       });
 
       if (!res.ok) {
@@ -46,19 +47,18 @@ export default function LoginForm() {
     }
   }
 
-
   return (
     <Card className="max-w-sm mx-auto p-6 mt-10 space-y-4">
       <h2 className="text-xl font-bold text-center">Login</h2>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <Label htmlFor="email">Email</Label>
+          <Label htmlFor="username">Username</Label>
           <Input
-            id="id"
+            id="username"
             type="text"
-            placeholder="sam"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            placeholder="Enter your ID"
+            value={username}
+            onChange={(e) => setId(e.target.value)}
             required
           />
         </div>
@@ -81,6 +81,15 @@ export default function LoginForm() {
           {loading ? 'Logging in...' : 'Login'}
         </Button>
       </form>
+
+      <div className="text-center mt-4">
+        <p>
+          <span>Don&apos;t have an account?</span>{' '}
+          <Link href="/register" className="text-blue-500 hover:underline">
+            Register here
+          </Link>
+        </p>
+      </div>
     </Card>
   );
 }
