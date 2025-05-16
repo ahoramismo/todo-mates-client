@@ -10,7 +10,7 @@ const API_URL = 'http://localhost:3000/todos';
 // Get token from localStorage
 function getAuthHeader(): Record<string, string> {
   const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
-  return token ? { Authorization: `Bearer ${token}` } : {};
+  return token ? {Authorization: `Bearer ${token}`} : {};
 }
 
 export async function fetchTodos(): Promise<Todo[]> {
@@ -34,7 +34,7 @@ export async function addTodo(title: string): Promise<Todo> {
   const res = await fetch(API_URL, {
     method: 'POST',
     headers,
-    body: JSON.stringify({ title, state:'in-progress' }),
+    body: JSON.stringify({title, state: 'todo'}),
   });
 
   if (!res.ok) throw new Error('Failed to add todo');

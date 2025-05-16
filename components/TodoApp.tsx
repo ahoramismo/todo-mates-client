@@ -1,11 +1,11 @@
 'use client';
 
-import {useEffect, useState} from 'react';
+import {ChangeEvent, useEffect, useState} from 'react';
 import {fetchTodos, addTodo, deleteTodo, Todo} from '@/lib/api';
-import {Input} from '@/components/ui/input';
 import {Button} from '@/components/ui/button';
 import {Card} from '@/components/ui/card';
 import AuthButton from '@/components/AuthButton';
+import TodoForm from "@/components/TodoForm";
 
 export default function TodoApp() {
   const [todos, setTodos] = useState<Todo[]>([]);
@@ -58,11 +58,11 @@ export default function TodoApp() {
   }
 
   // Group todos by state
-  const groupedTodos = {
-    todo: todos.filter((t) => t.state === 'todo'),
-    inProgress: todos.filter((t) => t.state === 'in-progress'),
-    done: todos.filter((t) => t.state === 'done'),
-  };
+  const groupedTodos = [
+    {name: 'todo', entries: todos.filter((t) => t.state === 'todo'),},
+    {name: 'in-progress', entries: todos.filter((t) => t.state === 'in-progress'),},
+    {name: 'done', entries: todos.filter((t) => t.state === 'done'),}
+  ]
 
   return (
     <div>
@@ -72,71 +72,34 @@ export default function TodoApp() {
           <AuthButton />
         </div>
 
-        <form onSubmit={handleAdd} className="flex gap-2 mt-4">
-          <Input
-            placeholder="What needs to be done?"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-          />
-          <Button type="submit">Add</Button>
-        </form>
+        <TodoForm
+          onSubmit={(e) => handleAdd(e)}
+          title={title}
+          onChange={(e: ChangeEvent<HTMLInputElement>) => setTitle(e.target.value)}
+        />
       </header>
 
       <section className="max-w-6xl mx-auto px-6 pb-10">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
-          <div>
-            <h2 className="text-xl font-semibold mb-4">Todo</h2>
-            <div className="space-y-4">
-              {groupedTodos.todo.map((todo) => (
-                <Card key={todo.id} className="p-4 flex justify-between items-center">
-                  <span>{todo.title}</span>
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={() => handleDelete(todo.id)}
-                  >
-                    Delete
-                  </Button>
-                </Card>
-              ))}
+          {groupedTodos.map((group) => (
+            <div key={group.name}>
+              <h2 className="text-xl font-semibold mb-4">Todo</h2>
+              <div className="space-y-4">
+                {group.entries.map((item) => (
+                  <Card key={item.id} className="p-4 flex justify-between items-center">
+                    <span>{item.title}</span>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => handleDelete(item.id)}
+                    >
+                      Delete
+                    </Button>
+                  </Card>
+                ))}
+              </div>
             </div>
-          </div>
-
-          <div>
-            <h2 className="text-xl font-semibold mb-4">In Progress</h2>
-            <div className="space-y-4">
-              {groupedTodos.inProgress.map((todo) => (
-                <Card key={todo.id} className="p-4 flex justify-between items-center">
-                  <span>{todo.title}</span>
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={() => handleDelete(todo.id)}
-                  >
-                    Delete
-                  </Button>
-                </Card>
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <h2 className="text-xl font-semibold mb-4">Done</h2>
-            <div className="space-y-4">
-              {groupedTodos.done.map((todo) => (
-                <Card key={todo.id} className="p-4 flex justify-between items-center">
-                  <span>{todo.title}</span>
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={() => handleDelete(todo.id)}
-                  >
-                    Delete
-                  </Button>
-                </Card>
-              ))}
-            </div>
-          </div>
+          ))}
         </div>
       </section>
     </div>
