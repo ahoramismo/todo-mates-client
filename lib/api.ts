@@ -1,6 +1,7 @@
 export type Todo = {
   id: number;
   title: string;
+  state: string;
   completed: boolean;
 };
 
@@ -33,7 +34,7 @@ export async function addTodo(title: string): Promise<Todo> {
   const res = await fetch(API_URL, {
     method: 'POST',
     headers,
-    body: JSON.stringify({ title }),
+    body: JSON.stringify({ title, state:'in-progress' }),
   });
 
   if (!res.ok) throw new Error('Failed to add todo');

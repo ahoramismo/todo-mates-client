@@ -57,39 +57,88 @@ export default function TodoApp() {
     );
   }
 
+  // Group todos by state
+  const groupedTodos = {
+    todo: todos.filter((t) => t.state === 'todo'),
+    inProgress: todos.filter((t) => t.state === 'in-progress'),
+    done: todos.filter((t) => t.state === 'done'),
+  };
+
   return (
-    <div className="max-w-xl mx-auto p-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Todo List</h1>
-        <AuthButton />
-      </div>
+    <div>
+      <header className="max-w-4xl mx-auto p-6">
+        <div className="flex justify-between items-center">
+          <h1 className="text-2xl font-bold">Todo List</h1>
+          <AuthButton />
+        </div>
 
-      <form onSubmit={handleAdd} className="flex gap-2 mt-4">
-        <Input
-          placeholder="What needs to be done?"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-        />
-        <Button type="submit">Add</Button>
-      </form>
+        <form onSubmit={handleAdd} className="flex gap-2 mt-4">
+          <Input
+            placeholder="What needs to be done?"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+          />
+          <Button type="submit">Add</Button>
+        </form>
+      </header>
 
-      <div className="space-y-4 mt-6">
-        {todos.map((todo) => (
-          <Card key={todo.id} className="p-4 flex justify-between items-center">
-            <span>{todo.title}</span>
-            <div className="flex gap-2 items-center">
-              <Button
-                variant="destructive"
-                size="sm"
-                onClick={() => handleDelete(todo.id)}
-              >
-                Delete
-              </Button>
+      <section className="max-w-6xl mx-auto px-6 pb-10">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+          <div>
+            <h2 className="text-xl font-semibold mb-4">Todo</h2>
+            <div className="space-y-4">
+              {groupedTodos.todo.map((todo) => (
+                <Card key={todo.id} className="p-4 flex justify-between items-center">
+                  <span>{todo.title}</span>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => handleDelete(todo.id)}
+                  >
+                    Delete
+                  </Button>
+                </Card>
+              ))}
             </div>
-          </Card>
-        ))}
+          </div>
 
-      </div>
+          <div>
+            <h2 className="text-xl font-semibold mb-4">In Progress</h2>
+            <div className="space-y-4">
+              {groupedTodos.inProgress.map((todo) => (
+                <Card key={todo.id} className="p-4 flex justify-between items-center">
+                  <span>{todo.title}</span>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => handleDelete(todo.id)}
+                  >
+                    Delete
+                  </Button>
+                </Card>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <h2 className="text-xl font-semibold mb-4">Done</h2>
+            <div className="space-y-4">
+              {groupedTodos.done.map((todo) => (
+                <Card key={todo.id} className="p-4 flex justify-between items-center">
+                  <span>{todo.title}</span>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => handleDelete(todo.id)}
+                  >
+                    Delete
+                  </Button>
+                </Card>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }
