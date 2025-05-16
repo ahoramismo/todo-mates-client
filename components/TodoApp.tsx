@@ -6,6 +6,12 @@ import {Button} from '@/components/ui/button';
 import {Card} from '@/components/ui/card';
 import AuthButton from '@/components/AuthButton';
 import TodoForm from "@/components/TodoForm";
+import {
+  DndContext,
+  closestCorners,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import TodoColumn from "@/components/TodoColumn";
 
 export default function TodoApp() {
   const [todos, setTodos] = useState<Todo[]>([]);
@@ -41,6 +47,21 @@ export default function TodoApp() {
   async function handleDelete(id: number) {
     await deleteTodo(id);
     loadTodos();
+  }
+
+  function handleDragEnd(event: DragEndEvent) {
+    const {active, over} = event;
+
+    if (!over) return;
+
+    const todoId = active.id;
+    const newState = over.id; // 'todo' | 'in-progress' | 'done'
+
+    const updated = todos.map(todo =>
+      todo.id === todoId ? {...todo, state: newState} : todo
+    );
+    setTodos(updated as never);
+    console.log(updated);
   }
 
 
@@ -80,27 +101,13 @@ export default function TodoApp() {
       </header>
 
       <section className="max-w-6xl mx-auto px-6 pb-10">
+        <DndContext collisionDetection={closestCorners} onDragEnd={handleDragEnd}>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
           {groupedTodos.map((group) => (
-            <div key={group.name}>
-              <h2 className="text-xl font-semibold mb-4">Todo</h2>
-              <div className="space-y-4">
-                {group.entries.map((item) => (
-                  <Card key={item.id} className="p-4 flex justify-between items-center">
-                    <span>{item.title}</span>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => handleDelete(item.id)}
-                    >
-                      Delete
-                    </Button>
-                  </Card>
-                ))}
-              </div>
-            </div>
+            <TodoColumn id={group.name} key={group.name} group={group} onDelete={handleDelete}/>
           ))}
         </div>
+        </DndContext>
       </section>
     </div>
   );
