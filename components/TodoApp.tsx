@@ -2,15 +2,8 @@
 
 import {ChangeEvent, useEffect, useState} from 'react';
 import {fetchTodos, addTodo, deleteTodo, Todo} from '@/lib/api';
-import {Button} from '@/components/ui/button';
-import {Card} from '@/components/ui/card';
 import AuthButton from '@/components/AuthButton';
 import TodoForm from "@/components/TodoForm";
-import {
-  DndContext,
-  closestCorners,
-  DragEndEvent,
-} from '@dnd-kit/core';
 import TodoColumn from "@/components/TodoColumn";
 
 export default function TodoApp() {
@@ -49,22 +42,6 @@ export default function TodoApp() {
     loadTodos();
   }
 
-  function handleDragEnd(event: DragEndEvent) {
-    const {active, over} = event;
-
-    if (!over) return;
-
-    const todoId = active.id;
-    const newState = over.id; // 'todo' | 'in-progress' | 'done'
-
-    const updated = todos.map(todo =>
-      todo.id === todoId ? {...todo, state: newState} : todo
-    );
-    setTodos(updated as never);
-    console.log(updated);
-  }
-
-
   if (isLoggedIn === null) {
     return <p>Loading...</p>;
   }
@@ -101,13 +78,11 @@ export default function TodoApp() {
       </header>
 
       <section className="max-w-6xl mx-auto px-6 pb-10">
-        <DndContext collisionDetection={closestCorners} onDragEnd={handleDragEnd}>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
           {groupedTodos.map((group) => (
             <TodoColumn id={group.name} key={group.name} group={group} onDelete={handleDelete}/>
           ))}
         </div>
-        </DndContext>
       </section>
     </div>
   );

@@ -1,9 +1,7 @@
 import {Card} from "@/components/ui/card";
 import {Todo} from "@/lib/api";
 import {Button} from "@/components/ui/button";
-import {type UniqueIdentifier, useDroppable} from "@dnd-kit/core";
-import {DraggableCard} from "@/components/DraggableCard";
-import {SortableContext, verticalListSortingStrategy} from "@dnd-kit/sortable";
+import {type UniqueIdentifier} from "@dnd-kit/core";
 
 type Props = {
   group: {
@@ -14,15 +12,25 @@ type Props = {
   id: UniqueIdentifier;
 };
 
-export default function TodoColumn({group, onDelete, id}: Props) {
-  const {setNodeRef} = useDroppable({id});
-
+export default function TodoColumn({group, onDelete}: Props) {
   return (
-    <div ref={setNodeRef} key={group.name}>
-      <h2 className="text-xl font-semibold mb-4">Todo</h2>
+    <div key={group.name}>
+      <h2 className="text-xl font-semibold mb-4">{group.name}</h2>
       <div className="space-y-4">
         {group.entries.map((item) => (
-          <DraggableCard key={item.id} todo={item} onDelete={onDelete} />
+          <Card
+            key={item.id}
+            className="p-4 flex justify-between items-center"
+          >
+            <span>{item.title}</span>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => onDelete(item.id)}
+            >
+              Delete
+            </Button>
+          </Card>
         ))}
       </div>
     </div>
