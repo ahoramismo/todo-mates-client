@@ -24,7 +24,10 @@ export default function TodoApp() {
     try {
       const data = await fetchTodos();
       setTodos(data);
-    } catch (err) {
+    } catch (err: unknown) {
+      if (err instanceof HttpError && err.status ===401) {
+        window.location.href = '/login';
+      }
       console.error('Failed to fetch todos:', err);
     }
   }

@@ -21,7 +21,8 @@ export async function fetchTodos(): Promise<Todo[]> {
     headers,
   });
 
-  if (!res.ok) throw new Error('Failed to fetch todos');
+  if (!res.ok) throw new HttpError('Failed to fetch todos', res.status);
+
   return res.json();
 }
 
@@ -37,7 +38,7 @@ export async function addTodo(title: string): Promise<Todo> {
     body: JSON.stringify({title, state: 'todo'}),
   });
 
-  if (!res.ok) throw new Error('Failed to add todo');
+  if (!res.ok) throw new HttpError('Failed to add todo', res.status);
   return res.json();
 }
 
