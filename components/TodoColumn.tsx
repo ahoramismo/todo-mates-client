@@ -1,36 +1,18 @@
-import {Card} from "@/components/ui/card";
-import {Todo} from "@/lib/api";
-import {Button} from "@/components/ui/button";
-import {type UniqueIdentifier} from "@dnd-kit/core";
+import { Todo } from '@/lib/api';
+import { SortableItem } from '@/components/SortableItem';
 
 type Props = {
-  group: {
-    name: string
-    entries: Todo[]
-  }
-  onDelete: (id: number) => void;
-  id: UniqueIdentifier;
+  items: Todo[];
+  title: string;
 };
 
-export default function TodoColumn({group, onDelete}: Props) {
+export default function TodoColumn({ title, items }: Props) {
   return (
-    <div key={group.name}>
-      <h2 className="text-xl font-semibold mb-4">{group.name}</h2>
+    <div>
+      <h2 className="text-xl font-semibold mb-4">{title}</h2>
       <div className="space-y-4">
-        {group.entries.map((item) => (
-          <Card
-            key={item.id}
-            className="p-4 flex justify-between items-center"
-          >
-            <span>{item.title}</span>
-            <Button
-              variant="destructive"
-              size="sm"
-              onClick={() => onDelete(item.id)}
-            >
-              Delete
-            </Button>
-          </Card>
+        {items.map((item) => (
+          <SortableItem key={item.id} item={item} />
         ))}
       </div>
     </div>

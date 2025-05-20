@@ -1,9 +1,18 @@
 export type Todo = {
-  id: number;
+  id: string;
   title: string;
   state: string;
   completed: boolean;
 };
+export class HttpError extends Error {
+  status: number;
+
+  constructor(message: string, status: number) {
+    super(message);
+    this.name = 'HttpError';
+    this.status = status;
+  }
+}
 
 const API_URL = 'http://localhost:3000/todos';
 

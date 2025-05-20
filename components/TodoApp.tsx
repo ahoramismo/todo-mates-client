@@ -1,15 +1,39 @@
 'use client';
 
-import {ChangeEvent, useEffect, useState} from 'react';
-import {fetchTodos, addTodo, deleteTodo, Todo} from '@/lib/api';
+import { useEffect, useState } from 'react';
+import type { ChangeEvent } from 'react';
+import { fetchTodos, addTodo, deleteTodo, HttpError } from '@/lib/api';
+import type { Todo } from '@/lib/api';
 import AuthButton from '@/components/AuthButton';
-import TodoForm from "@/components/TodoForm";
-import TodoColumn from "@/components/TodoColumn";
+import TodoForm from '@/components/TodoForm';
+
+import {
+  DndContext,
+  closestCenter,
+  DragOverlay,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragStartEvent
+} from '@dnd-kit/core';
+import type { DragEndEvent, DragOverEvent } from '@dnd-kit/core';
+import { sortableKeyboardCoordinates, arrayMove } from '@dnd-kit/sortable';
+import { SortableContainer } from '@/components/SortableContainer';
+import { Item } from '@/components/SortableItem';
 
 export default function TodoApp() {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [title, setTitle] = useState('');
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null); // null = unknown (loading)
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
+  const [activeId, setActiveId] = useState<string | null>(null);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates
+    })
+  );
 
   useEffect(() => {
     const token = localStorage.getItem('access_token');
@@ -25,7 +49,7 @@ export default function TodoApp() {
       const data = await fetchTodos();
       setTodos(data);
     } catch (err: unknown) {
-      if (err instanceof HttpError && err.status ===401) {
+      if (err instanceof HttpError && err.status === 401) {
         window.location.href = '/login';
       }
       console.error('Failed to fetch todos:', err);
@@ -45,6 +69,62 @@ export default function TodoApp() {
     loadTodos();
   }
 
+  function findContainer(id: string) {
+    const validContainers = ['todo', 'in-progress', 'done'];
+    const found = todos.find(({ id: todoId }) => id === todoId);
+
+    return validContainers.includes(id) ? id : found?.state;
+  }
+
+  function handleDragStart(e: DragStartEvent) {
+    if (typeof e.active.id === 'string') {
+      setActiveId(e.active.id);
+    }
+  }
+
+  function handleDragEnd(e: DragEndEvent) {
+    const { active, over } = e;
+    const activeContainer = findContainer(active?.id as string);
+    const overContainer = findContainer(over?.id as string);
+
+    if (!activeContainer || !overContainer || activeContainer !== overContainer) {
+      return;
+    }
+    console.log({ activeContainer, overContainer });
+    setTodos((prev) => {
+      const activeId = active?.id;
+      const overId = over?.id;
+      if (!activeId || !overId || activeId === overId) return prev;
+      const activeItemIndex = prev.findIndex(({ id: todoId }) => todoId === activeId);
+      const overItemIndex = prev.findIndex(({ id: todoId }) => todoId === overId);
+
+      return activeItemIndex === overItemIndex ? prev : arrayMove(prev, activeItemIndex, overItemIndex);
+    });
+
+    setActiveId(null);
+  }
+
+  function handleDragOver(e: DragOverEvent) {
+    const { over, active } = e;
+
+    const activeContainer = findContainer(active?.id as string);
+    const overContainer = findContainer(over?.id as string);
+
+    if (!activeContainer || !overContainer || activeContainer === overContainer) {
+      return;
+    }
+
+    setTodos((prev) => {
+      const found = prev.find((item) => item.id === active.id);
+      if (!found || !over) return prev;
+
+      const updatedItem = { ...found, state: over.id as string };
+
+      return prev.map((item) => (item.id === active.id ? updatedItem : item));
+    });
+
+  }
+
   if (isLoggedIn === null) {
     return <p>Loading...</p>;
   }
@@ -60,14 +140,16 @@ export default function TodoApp() {
 
   // Group todos by state
   const groupedTodos = [
-    {name: 'todo', entries: todos.filter((t) => t.state === 'todo'),},
-    {name: 'in-progress', entries: todos.filter((t) => t.state === 'in-progress'),},
-    {name: 'done', entries: todos.filter((t) => t.state === 'done'),}
-  ]
+    { name: 'todo', entries: todos.filter((t) => t.state === 'todo') },
+    { name: 'in-progress', entries: todos.filter((t) => t.state === 'in-progress') },
+    { name: 'done', entries: todos.filter((t) => t.state === 'done') }
+  ];
 
+  const activeItem = todos.find((t) => t.id === activeId);
+  console.log({ activeItem });
   return (
-    <div>
-      <header className="max-w-4xl mx-auto p-6">
+    <div className="flex max-w-4xl mx-auto flex-col min-h-screen">
+      <header className="w-full mx-auto p-6">
         <div className="flex justify-between items-center">
           <h1 className="text-2xl font-bold">Todo List</h1>
           <AuthButton />
@@ -80,11 +162,24 @@ export default function TodoApp() {
         />
       </header>
 
-      <section className="max-w-6xl mx-auto px-6 pb-10">
+      <section className="max-w-6xl w-full px-6 pb-10">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
-          {groupedTodos.map((group) => (
-            <TodoColumn id={group.name} key={group.name} group={group} onDelete={handleDelete}/>
-          ))}
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
+            onDragOver={handleDragOver}
+          >
+            {groupedTodos.map(({ name, entries }) => (
+              <SortableContainer key={name} title={name} items={entries} />
+            ))}
+            {activeItem && (
+              <DragOverlay>
+                <Item item={activeItem} />
+              </DragOverlay>
+            )}
+          </DndContext>
         </div>
       </section>
     </div>
