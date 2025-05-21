@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import type { ChangeEvent } from 'react';
-import { fetchTodos, addTodo, deleteTodo, HttpError } from '@/lib/api';
+import { fetchTodos, addTodo, deleteTodo, HttpError, updateTodo } from '@/lib/api';
 import type { Todo } from '@/lib/api';
 import AuthButton from '@/components/AuthButton';
 import TodoForm from '@/components/TodoForm';
@@ -82,7 +82,7 @@ export default function TodoApp() {
     }
   }
 
-  function handleDragEnd(e: DragEndEvent) {
+  async function handleDragEnd(e: DragEndEvent) {
     const { active, over } = e;
     const activeContainer = findContainer(active?.id as string);
     const overContainer = findContainer(over?.id as string);
@@ -90,7 +90,7 @@ export default function TodoApp() {
     if (!activeContainer || !overContainer || activeContainer !== overContainer) {
       return;
     }
-    console.log({ activeContainer, overContainer });
+
     setTodos((prev) => {
       const activeId = active?.id;
       const overId = over?.id;
@@ -104,7 +104,7 @@ export default function TodoApp() {
     setActiveId(null);
   }
 
-  function handleDragOver(e: DragOverEvent) {
+  async function handleDragOver(e: DragOverEvent) {
     const { over, active } = e;
 
     const activeContainer = findContainer(active?.id as string);
@@ -118,11 +118,16 @@ export default function TodoApp() {
       const found = prev.find((item) => item.id === active.id);
       if (!found || !over) return prev;
 
-      const updatedItem = { ...found, state: over.id as string };
+      const updatedItem = { ...found, state: overContainer };
 
       return prev.map((item) => (item.id === active.id ? updatedItem : item));
     });
 
+    try {
+      await updateTodo(active.id as string, { state: overContainer });
+    } catch (error) {
+      console.error('Failed to update todo state on drag over:', error);
+    }
   }
 
   if (isLoggedIn === null) {
@@ -146,7 +151,7 @@ export default function TodoApp() {
   ];
 
   const activeItem = todos.find((t) => t.id === activeId);
-  console.log({ activeItem });
+
   return (
     <div className="flex max-w-4xl mx-auto flex-col min-h-screen">
       <header className="w-full mx-auto p-6">
