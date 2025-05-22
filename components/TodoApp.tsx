@@ -1,9 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import type { ChangeEvent } from 'react';
-import { fetchTodos, addTodo, deleteTodo, HttpError, updateTodo } from '@/lib/api';
-import type { Todo } from '@/lib/api';
+import { Todo, updateTodo } from '@/lib/api';
 import AuthButton from '@/components/AuthButton';
 import TodoForm from '@/components/TodoForm';
 
@@ -21,60 +19,29 @@ import type { DragEndEvent, DragOverEvent } from '@dnd-kit/core';
 import { sortableKeyboardCoordinates, arrayMove } from '@dnd-kit/sortable';
 import { SortableContainer } from '@/components/SortableContainer';
 import { Item } from '@/components/SortableItem';
+import { useAuth, useTodos } from '@/hooks';
+import { useQueryClient } from '@tanstack/react-query';
 
 export default function TodoApp() {
-  const [todos, setTodos] = useState<Todo[]>([]);
-  const [title, setTitle] = useState('');
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
+  const queryClient = useQueryClient();
+  const { data: todos = [] } = useTodos();
+  const { isLoggedIn } = useAuth();
   const [activeId, setActiveId] = useState<string | null>(null);
 
   const sensors = useSensors(
-    useSensor(PointerSensor),
+    useSensor(PointerSensor, {
+      activationConstraint: { distance: 5 }
+    }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates
     })
   );
 
-  useEffect(() => {
-    const token = localStorage.getItem('access_token');
-    setIsLoggedIn(!!token);
-
-    if (token) {
-      loadTodos();
-    }
-  }, []);
-
-  async function loadTodos() {
-    try {
-      const data = await fetchTodos();
-      setTodos(data);
-    } catch (err: unknown) {
-      if (err instanceof HttpError && err.status === 401) {
-        window.location.href = '/login';
-      }
-      console.error('Failed to fetch todos:', err);
-    }
-  }
-
-  async function handleAdd(e: React.FormEvent) {
-    e.preventDefault();
-    if (!title.trim()) return;
-    await addTodo(title);
-    setTitle('');
-    loadTodos();
-  }
-
-  async function handleDelete(id: number) {
-    await deleteTodo(id);
-    loadTodos();
-  }
-
-  function findContainer(id: string) {
-    const validContainers = ['todo', 'in-progress', 'done'];
-    const found = todos.find(({ id: todoId }) => id === todoId);
-
-    return validContainers.includes(id) ? id : found?.state;
-  }
+  const findContainer = (id: string) => {
+    const validStates = ['todo', 'in-progress', 'done'];
+    if (validStates.includes(id)) return id;
+    return todos?.find((todo) => todo.id === id)?.state;
+  };
 
   function handleDragStart(e: DragStartEvent) {
     if (typeof e.active.id === 'string') {
@@ -82,53 +49,62 @@ export default function TodoApp() {
     }
   }
 
-  async function handleDragEnd(e: DragEndEvent) {
-    const { active, over } = e;
-    const activeContainer = findContainer(active?.id as string);
-    const overContainer = findContainer(over?.id as string);
+  function getContainerAndId(e: DragEndEvent | DragOverEvent) {
+    const activeId = String(e.active?.id);
+    const overId = String(e.over?.id);
+    const activeContainer = findContainer(activeId);
+    const overContainer = findContainer(overId);
 
-    if (!activeContainer || !overContainer || activeContainer !== overContainer) {
+    return { activeId, overId, activeContainer, overContainer };
+  }
+
+  /**
+   * TODO: support persistent re-ordering items in the same container
+   */
+  async function handleDragEnd(e: DragEndEvent) {
+    const { activeId, overId, activeContainer, overContainer } = getContainerAndId(e);
+
+    if (!activeContainer || !overContainer || activeContainer !== overContainer || activeId === overId) {
+      setActiveId(null);
       return;
     }
 
-    setTodos((prev) => {
-      const activeId = active?.id;
-      const overId = over?.id;
-      if (!activeId || !overId || activeId === overId) return prev;
-      const activeItemIndex = prev.findIndex(({ id: todoId }) => todoId === activeId);
-      const overItemIndex = prev.findIndex(({ id: todoId }) => todoId === overId);
+    queryClient.setQueryData<Todo[]>(['todos'], (old = []) => {
+      const fromIndex = old.findIndex((todo) => todo.id === activeId);
+      const toIndex = old.findIndex((todo) => todo.id === overId);
 
-      return activeItemIndex === overItemIndex ? prev : arrayMove(prev, activeItemIndex, overItemIndex);
+      if (fromIndex === -1 || toIndex === -1) return old;
+      return arrayMove(old, fromIndex, toIndex);
     });
 
     setActiveId(null);
   }
 
   async function handleDragOver(e: DragOverEvent) {
-    const { over, active } = e;
+    const { activeId, activeContainer, overContainer } = getContainerAndId(e);
 
-    const activeContainer = findContainer(active?.id as string);
-    const overContainer = findContainer(over?.id as string);
+    if (!activeContainer || !overContainer || activeContainer === overContainer) return;
 
-    if (!activeContainer || !overContainer || activeContainer === overContainer) {
-      return;
-    }
+    queryClient.setQueryData<Todo[]>(['todos'], (old = []) => {
+      const todo = old.find((t) => t.id === activeId);
+      if (!todo) return old;
 
-    setTodos((prev) => {
-      const found = prev.find((item) => item.id === active.id);
-      if (!found || !over) return prev;
-
-      const updatedItem = { ...found, state: overContainer };
-
-      return prev.map((item) => (item.id === active.id ? updatedItem : item));
+      const updated = { ...todo, state: overContainer };
+      return old.map((t) => (t.id === activeId ? updated : t));
     });
 
     try {
-      await updateTodo(active.id as string, { state: overContainer });
+      await updateTodo(activeId, { state: overContainer });
     } catch (error) {
       console.error('Failed to update todo state on drag over:', error);
     }
   }
+
+  useEffect(() => {
+    if (isLoggedIn === false) {
+      window.location.href = '/login';
+    }
+  }, [isLoggedIn]);
 
   if (isLoggedIn === null) {
     return <p>Loading...</p>;
@@ -160,11 +136,7 @@ export default function TodoApp() {
           <AuthButton />
         </div>
 
-        <TodoForm
-          onSubmit={(e) => handleAdd(e)}
-          title={title}
-          onChange={(e: ChangeEvent<HTMLInputElement>) => setTitle(e.target.value)}
-        />
+        <TodoForm />
       </header>
 
       <section className="max-w-6xl w-full px-6 pb-10">
