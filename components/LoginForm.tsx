@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import Link from 'next/link';
+import { login } from '@/lib/api';
 
 export default function LoginForm() {
   const [username, setId] = useState('');
@@ -19,27 +20,15 @@ export default function LoginForm() {
     setLoading(true);
 
     try {
-      const res = await fetch('http://localhost:3000/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
-      });
+      const res = await login(username, password);
 
       if (!res.ok) {
         const msg = await res.text();
         throw new Error(msg || 'Login failed');
       }
 
-      const data = await res.json();
-      console.log('Login success:', data);
-
-      // Store tokens
-      localStorage.setItem('access_token', data.access_token);
-      localStorage.setItem('refresh_token', data.refresh_token);
-
       // Redirect
       window.location.href = '/';
-
     } catch (err: any) {
       setError(err.message || 'Login failed');
     } finally {

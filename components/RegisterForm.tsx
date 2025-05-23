@@ -1,13 +1,15 @@
 'use client';
 
 import { useState } from 'react';
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import {router} from "next/client";
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
+import { useRouter } from 'next/navigation';
+import { register } from '@/lib/api';
 
 export default function RegisterForm() {
+  const router = useRouter();
   const [username, setName] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -26,17 +28,13 @@ export default function RegisterForm() {
     setLoading(true);
 
     try {
-      const res = await fetch('http://localhost:3000/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
-      });
+      const res = await register(username, password);
 
       if (!res.ok) throw new Error('Registration failed');
 
       const data = await res.json();
       console.log('Registered:', data);
-      router.push('/login');
+      router.push('/');
       // Optional: redirect or clear form
     } catch (err: any) {
       setError(err.message || 'Something went wrong');
@@ -55,12 +53,7 @@ export default function RegisterForm() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <Label htmlFor="username">Name</Label>
-              <Input
-                id="username"
-                value={username}
-                onChange={(e) => setName(e.target.value)}
-                required
-              />
+              <Input id="username" value={username} onChange={(e) => setName(e.target.value)} required />
             </div>
             <div>
               <Label htmlFor="password">Password</Label>

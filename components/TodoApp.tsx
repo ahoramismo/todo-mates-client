@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Todo, updateTodo } from '@/lib/api';
 import AuthButton from '@/components/AuthButton';
 import TodoForm from '@/components/TodoForm';
@@ -100,23 +100,8 @@ export default function TodoApp() {
     }
   }
 
-  useEffect(() => {
-    if (isLoggedIn === false) {
-      window.location.href = '/login';
-    }
-  }, [isLoggedIn]);
-
   if (isLoggedIn === null) {
     return <p>Loading...</p>;
-  }
-
-  if (!isLoggedIn) {
-    return (
-      <div className="max-w-xl mx-auto p-6 text-center">
-        <h1 className="text-2xl font-bold mb-4">Please log in to manage your todos</h1>
-        <AuthButton />
-      </div>
-    );
   }
 
   // Group todos by state

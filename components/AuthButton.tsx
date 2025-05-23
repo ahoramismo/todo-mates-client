@@ -1,33 +1,16 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
+import { logout } from '@/lib/api';
+import { useRouter } from 'next/navigation';
 
 export default function AuthButton() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const router = useRouter();
 
-  useEffect(() => {
-    const token = localStorage.getItem('access_token');
-    setIsLoggedIn(!!token);
-  }, []);
-
-  const handleLogout = () => {
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('refresh_token');
-    setIsLoggedIn(false);
+  const handleLogout = async () => {
+    await logout();
     router.push('/login');
   };
 
-  const handleLogin = () => {
-    console.log('hello')
-    router.push('/login');
-  };
-
-  return (
-    <Button onClick={isLoggedIn ? handleLogout : handleLogin}>
-      {isLoggedIn ? 'Logout' : 'Login'}
-    </Button>
-  );
+  return <Button onClick={handleLogout}>Logout</Button>;
 }
