@@ -6,7 +6,6 @@ export function useDeleteTodo() {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      console.log('hello')
       await deleteTodo(id);
     },
     onSuccess: () => {

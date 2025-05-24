@@ -3,7 +3,8 @@ export type Todo = {
   title: string;
   state: string;
 };
-export type UpdateDto = Partial<Pick<Todo, 'title' | 'state'>>;
+export type CreateDto = Partial<Pick<Todo, 'title' | 'state'>>;
+export type UpdateDto = CreateDto;
 
 export class HttpError extends Error {
   status: number;

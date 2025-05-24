@@ -1,4 +1,3 @@
-// hooks/useAddTodo.ts
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { addTodo, Todo } from '@/lib/api';
 
@@ -18,7 +17,7 @@ export function useAddTodo() {
         state: 'todo'
       };
 
-      queryClient.setQueryData<Todo[]>(['todos'], (old = []) => [newTodo, ...old]);
+      queryClient.setQueryData<Todo[]>(['todos'], (old = []) => [...old, newTodo]);
 
       return { previousTodos };
     },
@@ -29,6 +28,6 @@ export function useAddTodo() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['todos'] });
-    },
+    }
   });
 }
