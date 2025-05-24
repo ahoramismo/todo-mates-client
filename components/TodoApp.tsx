@@ -1,26 +1,31 @@
 'use client';
 
 import { useState } from 'react';
-import { Todo, updateTodo } from '@/lib/api';
 import AuthButton from '@/components/AuthButton';
 import TodoForm from '@/components/TodoForm';
 
 import {
   DndContext,
   closestCenter,
-  DragOverlay,
   KeyboardSensor,
   PointerSensor,
   useSensor,
   useSensors,
-  DragStartEvent
+  DragStartEvent,
+  DragOverlay
 } from '@dnd-kit/core';
+
 import type { DragEndEvent, DragOverEvent } from '@dnd-kit/core';
-import { sortableKeyboardCoordinates, arrayMove } from '@dnd-kit/sortable';
-import { SortableContainer } from '@/components/SortableContainer';
-import { Item } from '@/components/SortableItem';
+import {
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+  SortableContext,
+  arrayMove
+} from '@dnd-kit/sortable';
+import { SortableItem } from '@/components/SortableItem';
 import { useAuth, useTodos } from '@/hooks';
 import { useQueryClient } from '@tanstack/react-query';
+import { Todo } from '@/lib/api';
 
 export default function TodoApp() {
   const queryClient = useQueryClient();
@@ -49,67 +54,52 @@ export default function TodoApp() {
     }
   }
 
-  function getContainerAndId(e: DragEndEvent | DragOverEvent) {
-    const activeId = String(e.active?.id);
-    const overId = String(e.over?.id);
-    const activeContainer = findContainer(activeId);
-    const overContainer = findContainer(overId);
-
-    return { activeId, overId, activeContainer, overContainer };
-  }
+  const handleDragCancel = () => {
+    setActiveId(null);
+  };
 
   /**
    * TODO: support persistent re-ordering items in the same container
    */
   async function handleDragEnd(e: DragEndEvent) {
-    const { activeId, overId, activeContainer, overContainer } = getContainerAndId(e);
+    const { active, over } = e;
+    setActiveId(null);
 
-    if (!activeContainer || !overContainer || activeContainer !== overContainer || activeId === overId) {
-      setActiveId(null);
-      return;
-    }
+    if (!over || active.id === over.id) return;
 
     queryClient.setQueryData<Todo[]>(['todos'], (old = []) => {
-      const fromIndex = old.findIndex((todo) => todo.id === activeId);
-      const toIndex = old.findIndex((todo) => todo.id === overId);
-
-      if (fromIndex === -1 || toIndex === -1) return old;
-      return arrayMove(old, fromIndex, toIndex);
+      // const oldIndex = old.findIndex((todo) => todo.id === active.id);
+      // const newIndex = old.findIndex((todo) => todo.id === over.id);
+      // if (oldIndex === -1 || newIndex === -1) {
+      //   return old;
+      // }
+      return old;
+      // return arrayMove(old, oldIndex, newIndex);
     });
 
-    setActiveId(null);
+    // mutation.mutate(
+    //   queryClient.getQueryData<Todo[]>(['todos'])?.map((todo) => todo.id) || []
+    // );
   }
 
   async function handleDragOver(e: DragOverEvent) {
-    const { activeId, activeContainer, overContainer } = getContainerAndId(e);
+    const { active, over } = e;
 
-    if (!activeContainer || !overContainer || activeContainer === overContainer) return;
+    if (!over || active.id === over.id) return;
 
     queryClient.setQueryData<Todo[]>(['todos'], (old = []) => {
-      const todo = old.find((t) => t.id === activeId);
-      if (!todo) return old;
+      const oldIndex = old.findIndex((todo) => todo.id === active.id);
+      const newIndex = old.findIndex((todo) => todo.id === over.id);
 
-      const updated = { ...todo, state: overContainer };
-      return old.map((t) => (t.id === activeId ? updated : t));
+      if (oldIndex === -1 || newIndex === -1) return old;
+
+      return arrayMove(old, oldIndex, newIndex);
     });
-
-    try {
-      await updateTodo(activeId, { state: overContainer });
-    } catch (error) {
-      console.error('Failed to update todo state on drag over:', error);
-    }
   }
 
   if (isLoggedIn === null) {
     return <p>Loading...</p>;
   }
-
-  // Group todos by state
-  const groupedTodos = [
-    { name: 'todo', entries: todos.filter((t) => t.state === 'todo') },
-    { name: 'in-progress', entries: todos.filter((t) => t.state === 'in-progress') },
-    { name: 'done', entries: todos.filter((t) => t.state === 'done') }
-  ];
 
   const activeItem = todos.find((t) => t.id === activeId);
 
@@ -125,24 +115,32 @@ export default function TodoApp() {
       </header>
 
       <section className="max-w-6xl w-full px-6 pb-10">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
-          <DndContext
-            sensors={sensors}
-            collisionDetection={closestCenter}
-            onDragStart={handleDragStart}
-            onDragEnd={handleDragEnd}
-            onDragOver={handleDragOver}
-          >
-            {groupedTodos.map(({ name, entries }) => (
-              <SortableContainer key={name} title={name} items={entries} />
-            ))}
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragStart={handleDragStart}
+          onDragCancel={handleDragCancel}
+          onDragEnd={handleDragEnd}
+          onDragOver={handleDragOver}
+        >
+          <SortableContext items={todos.map(({ title }) => title)} strategy={verticalListSortingStrategy}>
+            <div>
+              <div className="space-y-4">
+                {todos.map((item) => (
+                  <SortableItem key={item.id} item={item} />
+                ))}
+              </div>
+            </div>
+          </SortableContext>
+          <DragOverlay>
             {activeItem && (
-              <DragOverlay>
-                <Item item={activeItem} />
-              </DragOverlay>
+              <div className="flex items-center gap-2 rounded-xl border p-2 shadow-md bg-white">
+                <span className="i-lucide-grip-vertical cursor-grab" />
+                <span className="line-clamp-1">{activeItem.title}</span>
+              </div>
             )}
-          </DndContext>
-        </div>
+          </DragOverlay>
+        </DndContext>
       </section>
     </div>
   );
