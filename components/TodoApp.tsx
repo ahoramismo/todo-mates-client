@@ -123,7 +123,7 @@ export default function TodoApp() {
           onDragEnd={handleDragEnd}
           onDragOver={handleDragOver}
         >
-          <SortableContext items={todos.map(({ title }) => title)} strategy={verticalListSortingStrategy}>
+          <SortableContext items={todos.map(({ id }) => id)} strategy={verticalListSortingStrategy}>
             <div>
               <div className="space-y-4">
                 {todos.map((item) => (

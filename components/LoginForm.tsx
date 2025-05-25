@@ -30,7 +30,7 @@ export default function LoginForm() {
       // Redirect
       window.location.href = '/';
     } catch (err: any) {
-      setError(err.message || 'Login failed');
+      setError('Login failed. Please try again.');
     } finally {
       setLoading(false);
     }
