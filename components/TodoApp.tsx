@@ -26,6 +26,7 @@ import { SortableItem } from '@/components/SortableItem';
 import { useAuth, useTodos, useReorderTodos } from '@/hooks';
 import { useQueryClient } from '@tanstack/react-query';
 import { Todo } from '@/lib/api';
+import { ThemeToggleButton } from '@/components/ThemeToggleButton';
 
 export default function TodoApp() {
   const queryClient = useQueryClient();
@@ -90,7 +91,10 @@ export default function TodoApp() {
       <header className="w-full mx-auto p-6">
         <div className="flex justify-between items-center">
           <h1 className="text-2xl font-bold">Todo List</h1>
-          <AuthButton />
+          <div className="flex items-center gap-2">
+            <ThemeToggleButton />
+            <AuthButton />
+          </div>
         </div>
 
         <TodoForm />
