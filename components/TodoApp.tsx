@@ -22,7 +22,7 @@ import {
   SortableContext,
   arrayMove
 } from '@dnd-kit/sortable';
-import { SortableItem } from '@/components/SortableItem';
+import { Item, SortableItem } from '@/components/SortableItem';
 import { useAuth, useTodos, useReorderTodos } from '@/hooks';
 import { useQueryClient } from '@tanstack/react-query';
 import { Todo } from '@/lib/api';
@@ -73,11 +73,9 @@ export default function TodoApp() {
     }
 
     const reorderedTodos = arrayMove(todos, oldIndex, newIndex);
-    const ids = reorderedTodos.map((todo) => todo.id);
+    const reorderedIds = reorderedTodos.map((todo) => todo.id);
 
-    queryClient.setQueryData<Todo[]>(['todos'], reorderedTodos);
-
-    reorderTodo(ids);
+    reorderTodo(reorderedIds);
   }
 
   if (isLoggedIn === null) {
@@ -119,10 +117,7 @@ export default function TodoApp() {
           </SortableContext>
           <DragOverlay>
             {activeItem && (
-              <div className="flex items-center gap-2 rounded-xl border p-2 shadow-md bg-white">
-                <span className="i-lucide-grip-vertical cursor-grab" />
-                <span className="line-clamp-1">{activeItem.title}</span>
-              </div>
+              <Item item={activeItem} />
             )}
           </DragOverlay>
         </DndContext>
