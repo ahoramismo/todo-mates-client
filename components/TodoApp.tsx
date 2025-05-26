@@ -15,7 +15,7 @@ import {
   DragOverlay
 } from '@dnd-kit/core';
 
-import type { DragEndEvent, DragOverEvent } from '@dnd-kit/core';
+import type { DragEndEvent } from '@dnd-kit/core';
 import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
@@ -23,7 +23,7 @@ import {
   arrayMove
 } from '@dnd-kit/sortable';
 import { SortableItem } from '@/components/SortableItem';
-import { useAuth, useTodos } from '@/hooks';
+import { useAuth, useTodos, useReorderTodos } from '@/hooks';
 import { useQueryClient } from '@tanstack/react-query';
 import { Todo } from '@/lib/api';
 
@@ -32,7 +32,7 @@ export default function TodoApp() {
   const { data: todos = [] } = useTodos();
   const { isLoggedIn } = useAuth();
   const [activeId, setActiveId] = useState<string | null>(null);
-
+  const { mutate: reorderTodo } = useReorderTodos();
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: { distance: 5 }
@@ -41,12 +41,6 @@ export default function TodoApp() {
       coordinateGetter: sortableKeyboardCoordinates
     })
   );
-
-  const findContainer = (id: string) => {
-    const validStates = ['todo', 'in-progress', 'done'];
-    if (validStates.includes(id)) return id;
-    return todos?.find((todo) => todo.id === id)?.state;
-  };
 
   function handleDragStart(e: DragStartEvent) {
     if (typeof e.active.id === 'string') {
@@ -67,34 +61,22 @@ export default function TodoApp() {
 
     if (!over || active.id === over.id) return;
 
-    queryClient.setQueryData<Todo[]>(['todos'], (old = []) => {
-      // const oldIndex = old.findIndex((todo) => todo.id === active.id);
-      // const newIndex = old.findIndex((todo) => todo.id === over.id);
-      // if (oldIndex === -1 || newIndex === -1) {
-      //   return old;
-      // }
-      return old;
-      // return arrayMove(old, oldIndex, newIndex);
-    });
+    const todos = queryClient.getQueryData<Todo[]>(['todos']) ?? [];
 
-    // mutation.mutate(
-    //   queryClient.getQueryData<Todo[]>(['todos'])?.map((todo) => todo.id) || []
-    // );
-  }
+    const oldIndex = todos.findIndex((todo) => todo.id === active.id);
+    const newIndex = todos.findIndex((todo) => todo.id === over.id);
 
-  async function handleDragOver(e: DragOverEvent) {
-    const { active, over } = e;
+    if (oldIndex === -1 || newIndex === -1) {
+      console.warn('Invalid drag IDs', { active, over });
+      return;
+    }
 
-    if (!over || active.id === over.id) return;
+    const reorderedTodos = arrayMove(todos, oldIndex, newIndex);
+    const ids = reorderedTodos.map((todo) => todo.id);
 
-    queryClient.setQueryData<Todo[]>(['todos'], (old = []) => {
-      const oldIndex = old.findIndex((todo) => todo.id === active.id);
-      const newIndex = old.findIndex((todo) => todo.id === over.id);
+    queryClient.setQueryData<Todo[]>(['todos'], reorderedTodos);
 
-      if (oldIndex === -1 || newIndex === -1) return old;
-
-      return arrayMove(old, oldIndex, newIndex);
-    });
+    reorderTodo(ids);
   }
 
   if (isLoggedIn === null) {
@@ -121,7 +103,6 @@ export default function TodoApp() {
           onDragStart={handleDragStart}
           onDragCancel={handleDragCancel}
           onDragEnd={handleDragEnd}
-          onDragOver={handleDragOver}
         >
           <SortableContext items={todos.map(({ id }) => id)} strategy={verticalListSortingStrategy}>
             <div>

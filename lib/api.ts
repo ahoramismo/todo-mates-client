@@ -2,6 +2,7 @@ export type Todo = {
   id: string;
   title: string;
   state: string;
+  order?: number;
 };
 export type CreateDto = Partial<Pick<Todo, 'title' | 'state'>>;
 export type UpdateDto = CreateDto;
@@ -54,6 +55,17 @@ export async function deleteTodo(id: string): Promise<void> {
   });
 }
 
+export async function reorderTodosOnServer(newOrder: string[]){
+  return await fetch(`${TODO_BASE}/reorder`, {
+    method: 'PATCH',
+    credentials: 'include',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ ids: newOrder })
+  });
+}
+
 export async function updateTodo(id: string, todo: UpdateDto): Promise<void> {
   const headers = {
     'Content-Type': 'application/json'
@@ -90,3 +102,4 @@ export async function logout() {
     credentials: 'include'
   });
 }
+
