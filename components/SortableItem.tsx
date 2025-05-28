@@ -35,7 +35,7 @@ export function Item({ item, onDelete, listeners, isOverlay = false }: ItemProps
       <Checkbox />
       <span
         title={item.title}
-        className={cn('flex-1 text-sm', item.state === 'done' && 'line-through text-muted-foreground')}
+        className={cn('flex-1 text-sm truncate', item.state === 'done' && 'line-through text-muted-foreground')}
       >
         {item.title}
       </span>
