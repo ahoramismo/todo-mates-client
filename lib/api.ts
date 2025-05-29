@@ -2,6 +2,7 @@ export type Todo = {
   id: string;
   title: string;
   state: string;
+  completed?: boolean;
   order?: number;
 };
 export type CreateDto = Partial<Pick<Todo, 'title' | 'state'>>;
@@ -55,7 +56,7 @@ export async function deleteTodo(id: string): Promise<void> {
   });
 }
 
-export async function reorderTodosOnServer(newOrder: string[]){
+export async function reorderTodosOnServer(newOrder: string[]) {
   return await fetch(`${TODO_BASE}/reorder`, {
     method: 'PATCH',
     credentials: 'include',
@@ -67,17 +68,23 @@ export async function reorderTodosOnServer(newOrder: string[]){
 }
 
 export async function updateTodo(id: string, todo: UpdateDto): Promise<void> {
-  const headers = {
-    'Content-Type': 'application/json'
-  };
-
   await fetch(`${TODO_BASE}/${id}`, {
     method: 'PATCH',
-    headers,
+    headers: { 'Content-Type': 'application/json' },
     credentials: 'include',
     body: JSON.stringify(todo)
   });
 }
+
+export async function toggleTodo(item: Todo): Promise<void> {
+  await fetch(`${TODO_BASE}/${item.id}/toggle-completed`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+  });
+}
+
+
 
 export async function register(username: string, password: string) {
   return fetch(`${AUTH_BASE}/register`, {
@@ -102,4 +109,3 @@ export async function logout() {
     credentials: 'include'
   });
 }
-

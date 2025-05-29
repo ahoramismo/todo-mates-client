@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { GripVertical, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Todo } from '@/lib/api';
-import { useDeleteTodo } from '@/hooks';
+import { useDeleteTodo, useToggleTodo } from '@/hooks';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
@@ -15,11 +15,12 @@ type TodoItemProps = {
 type ItemProps = {
   item: Todo;
   onDelete?: (id: string) => void;
+  onToggle?: (item: Todo) => void;
   listeners?: ReturnType<typeof useSortable>['listeners'];
   isOverlay?: boolean;
 };
 
-export function Item({ item, onDelete, listeners, isOverlay = false }: ItemProps) {
+export function Item({ item, onDelete, onToggle, listeners, isOverlay = false }: ItemProps) {
   return (
     <div
       className={cn('group flex items-center gap-2 rounded-xl border p-2 shadow-sm bg-card', isOverlay && 'opacity-75')}
@@ -32,7 +33,16 @@ export function Item({ item, onDelete, listeners, isOverlay = false }: ItemProps
       >
         <GripVertical className="h-4 w-4 text-muted-foreground" />
       </Button>
-      <Checkbox />
+      <Checkbox
+        checked={item.completed}
+        onClick={() => {
+          console.log('click');
+          onToggle?.(item);
+        }}
+        onToggle={() => {
+          console.log('toggle');
+        }}
+      />
       <span
         title={item.title}
         className={cn('flex-1 text-sm truncate', item.state === 'done' && 'line-through text-muted-foreground')}
@@ -63,10 +73,11 @@ export const SortableItem: FC<TodoItemProps> = ({ item }) => {
   };
 
   const { mutate: deleteTodo } = useDeleteTodo();
+  const { mutate: toggleTodo } = useToggleTodo();
 
   return (
     <div ref={setNodeRef} {...attributes} style={style}>
-      <Item item={item} listeners={listeners} onDelete={deleteTodo} isOverlay={isDragging} />
+      <Item item={item} listeners={listeners} onDelete={deleteTodo} onToggle={toggleTodo} isOverlay={isDragging} />
     </div>
   );
 };
