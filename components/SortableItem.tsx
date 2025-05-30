@@ -35,17 +35,11 @@ export function Item({ item, onDelete, onToggle, listeners, isOverlay = false }:
       </Button>
       <Checkbox
         checked={item.completed}
-        onClick={() => {
-          console.log('click');
-          onToggle?.(item);
-        }}
-        onToggle={() => {
-          console.log('toggle');
-        }}
+        onClick={() => onToggle?.(item)}
       />
       <span
         title={item.title}
-        className={cn('flex-1 text-sm truncate', item.state === 'done' && 'line-through text-muted-foreground')}
+        className={cn('flex-1 text-sm truncate', item.completed && 'line-through text-muted-foreground')}
       >
         {item.title}
       </span>
