@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from 'next/font/google';
 import ReactQueryProvider from './providers/react-query';
 import './globals.css';
 import { ThemeProvider } from '@/app/providers/theme-provider';
+import { Toaster } from '@/components/ui/sonner';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -27,13 +28,11 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning={true}>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          <ReactQueryProvider>{children}</ReactQueryProvider>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+          <ReactQueryProvider>
+            {children}
+            <Toaster richColors />
+          </ReactQueryProvider>
         </ThemeProvider>
       </body>
     </html>

@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { addTodo, Todo } from '@/lib/api';
+import { toast } from "sonner"
 
 export function useAddTodo() {
   const queryClient = useQueryClient();
@@ -27,6 +28,7 @@ export function useAddTodo() {
       }
     },
     onSuccess: () => {
+      toast.success('Todo created successfully!');
       queryClient.invalidateQueries({ queryKey: ['todos'] });
     }
   });

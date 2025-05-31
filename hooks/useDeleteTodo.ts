@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { deleteTodo } from '@/lib/api';
+import { toast } from 'sonner';
 
 export function useDeleteTodo() {
   const queryClient = useQueryClient();
@@ -10,6 +11,7 @@ export function useDeleteTodo() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['todos'] });
+      toast.success('Todo deleted successfully!');
     }
   });
 }
