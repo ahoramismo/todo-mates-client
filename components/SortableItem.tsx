@@ -1,6 +1,7 @@
-import type { FC } from 'react';
+import { FC, useState } from 'react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { GripVertical, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Todo } from '@/lib/api';
@@ -20,10 +21,43 @@ type ItemProps = {
   isOverlay?: boolean;
 };
 
-export function Item({ item, onDelete, onToggle, listeners, isOverlay = false }: ItemProps) {
+export function Item({
+   item,
+   onDelete,
+   onToggle,
+   listeners,
+   isOverlay = false,
+   onEdit,
+ }: ItemProps & { onEdit?: (id: string, title: string) => void }) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [title, setTitle] = useState(item.title);
+
+  const handleEdit = () => {
+    setIsEditing(true);
+  };
+
+  const handleBlur = () => {
+    setIsEditing(false);
+    if (title.trim() !== item.title) {
+      onEdit?.(item.id, title.trim());
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleBlur();
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      setTitle(item.title);
+      setIsEditing(false);
+    }
+  };
+
   return (
     <div
       className={cn('group flex items-center gap-2 rounded-xl border p-2 shadow-sm bg-card', isOverlay && 'opacity-75')}
+      onDoubleClick={handleEdit}
     >
       <Button
         variant="ghost"
@@ -33,16 +67,30 @@ export function Item({ item, onDelete, onToggle, listeners, isOverlay = false }:
       >
         <GripVertical className="h-4 w-4 text-muted-foreground" />
       </Button>
+
       <Checkbox
         checked={item.completed}
         onClick={() => onToggle?.(item)}
       />
-      <span
-        title={item.title}
-        className={cn('flex-1 text-sm truncate', item.completed && 'line-through text-muted-foreground')}
-      >
-        {item.title}
-      </span>
+
+      {isEditing ? (
+        <Input
+          autoFocus
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          onBlur={handleBlur}
+          onKeyDown={handleKeyDown}
+          className="flex-1 h-8 text-sm"
+        />
+      ) : (
+        <span
+          title={item.title}
+          className={cn('flex-1 text-sm truncate', item.completed && 'line-through text-muted-foreground')}
+        >
+          {item.title}
+        </span>
+      )}
+
       <Button
         variant="ghost"
         size="icon"
