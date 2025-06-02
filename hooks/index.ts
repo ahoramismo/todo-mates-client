@@ -4,3 +4,4 @@ export {useDeleteTodo} from './useDeleteTodo';
 export {useReorderTodos} from './useReorderTodos';
 export {useTodos} from './useTodos';
 export {useToggleTodo} from './useToggleTodo';
+export {useUpdateTodo} from './useUpdateTodo';

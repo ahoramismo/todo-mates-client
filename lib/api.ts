@@ -6,7 +6,7 @@ export type Todo = {
   order?: number;
 };
 export type CreateDto = Partial<Pick<Todo, 'title' | 'state'>>;
-export type UpdateDto = CreateDto;
+export type UpdateDto = Pick<Todo, 'id'> & Partial<Omit<Todo, 'id'>>;
 
 export class HttpError extends Error {
   status: number;
@@ -67,8 +67,8 @@ export async function reorderTodosOnServer(newOrder: string[]) {
   });
 }
 
-export async function updateTodo(id: string, todo: UpdateDto): Promise<void> {
-  await fetch(`${TODO_BASE}/${id}`, {
+export async function updateTodo(todo: UpdateDto): Promise<void> {
+  await fetch(`${TODO_BASE}/${todo.id}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     credentials: 'include',

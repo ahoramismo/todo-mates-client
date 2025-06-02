@@ -4,8 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { GripVertical, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Todo } from '@/lib/api';
-import { useDeleteTodo, useToggleTodo } from '@/hooks';
+import { Todo, UpdateDto } from '@/lib/api';
+import { useDeleteTodo, useToggleTodo, useUpdateTodo } from '@/hooks';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
@@ -17,18 +17,19 @@ type ItemProps = {
   item: Todo;
   onDelete?: (id: string) => void;
   onToggle?: (item: Todo) => void;
+  onUpdate?: (item: UpdateDto) => void;
   listeners?: ReturnType<typeof useSortable>['listeners'];
   isOverlay?: boolean;
 };
 
 export function Item({
-   item,
-   onDelete,
-   onToggle,
-   listeners,
-   isOverlay = false,
-   onEdit,
- }: ItemProps & { onEdit?: (id: string, title: string) => void }) {
+  item,
+  onDelete,
+  onToggle,
+  listeners,
+  isOverlay = false,
+  onUpdate
+}: ItemProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [title, setTitle] = useState(item.title);
 
@@ -39,7 +40,8 @@ export function Item({
   const handleBlur = () => {
     setIsEditing(false);
     if (title.trim() !== item.title) {
-      onEdit?.(item.id, title.trim());
+      console.log(item.id);
+      onUpdate?.({id: item.id, title: title.trim()});
     }
   };
 
@@ -68,10 +70,7 @@ export function Item({
         <GripVertical className="h-4 w-4 text-muted-foreground" />
       </Button>
 
-      <Checkbox
-        checked={item.completed}
-        onClick={() => onToggle?.(item)}
-      />
+      <Checkbox checked={item.completed} onClick={() => onToggle?.(item)} />
 
       {isEditing ? (
         <Input
@@ -116,10 +115,18 @@ export const SortableItem: FC<TodoItemProps> = ({ item }) => {
 
   const { mutate: deleteTodo } = useDeleteTodo();
   const { mutate: toggleTodo } = useToggleTodo();
+  const { mutate: updateTodo } = useUpdateTodo();
 
   return (
     <div ref={setNodeRef} {...attributes} style={style}>
-      <Item item={item} listeners={listeners} onDelete={deleteTodo} onToggle={toggleTodo} isOverlay={isDragging} />
+      <Item
+        item={item}
+        listeners={listeners}
+        onDelete={deleteTodo}
+        onUpdate={updateTodo}
+        onToggle={toggleTodo}
+        isOverlay={isDragging}
+      />
     </div>
   );
 };
