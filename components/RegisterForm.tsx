@@ -44,7 +44,7 @@ export default function RegisterForm() {
   }
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gray-100 p-4">
+    <div className="flex justify-center items-center min-h-screen p-4">
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle>Create an Account</CardTitle>
@@ -52,11 +52,15 @@ export default function RegisterForm() {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <Label htmlFor="username">Name</Label>
+              <Label htmlFor="username" className="mb-2">
+                Username
+              </Label>
               <Input id="username" value={username} onChange={(e) => setName(e.target.value)} required />
             </div>
             <div>
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password" className="mb-2">
+                Password
+              </Label>
               <Input
                 id="password"
                 type="password"
@@ -66,7 +70,7 @@ export default function RegisterForm() {
               />
             </div>
             <div>
-              <Label htmlFor="confirmPassword">Confirm Password</Label>
+              <Label htmlFor="confirmPassword" className="mb-2">Confirm Password</Label>
               <Input
                 id="confirmPassword"
                 type="password"
