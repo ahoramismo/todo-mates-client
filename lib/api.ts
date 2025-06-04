@@ -49,6 +49,14 @@ export async function addTodo(title: string): Promise<Todo> {
   return res.json();
 }
 
+export async function archiveTodo(id: string): Promise<void> {
+  await fetch(`${TODO_BASE}/${id}/toggle-archived`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include'
+  });
+}
+
 export async function deleteTodo(id: string): Promise<void> {
   await fetch(`${TODO_BASE}/${id}`, {
     method: 'DELETE',
@@ -60,9 +68,7 @@ export async function reorderTodosOnServer(newOrder: string[]) {
   return await fetch(`${TODO_BASE}/reorder`, {
     method: 'PATCH',
     credentials: 'include',
-    headers: {
-      'Content-Type': 'application/json'
-    },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ ids: newOrder })
   });
 }
@@ -80,11 +86,9 @@ export async function toggleTodo(item: Todo): Promise<void> {
   await fetch(`${TODO_BASE}/${item.id}/toggle-completed`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
-    credentials: 'include',
+    credentials: 'include'
   });
 }
-
-
 
 export async function register(username: string, password: string) {
   return fetch(`${AUTH_BASE}/register`, {

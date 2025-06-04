@@ -8,6 +8,8 @@ import { Todo, UpdateDto } from '@/lib/api';
 import { useDeleteTodo, useToggleTodo, useUpdateTodo } from '@/hooks';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { TodoItemMenu } from '@/components/TodoItemMenu';
+import { useArchiveTodo } from '@/hooks/useArchiveTodo';
 
 type TodoItemProps = {
   item: Todo;
@@ -15,6 +17,7 @@ type TodoItemProps = {
 
 type ItemProps = {
   item: Todo;
+  onArchive?: (id: string) => void;
   onDelete?: (id: string) => void;
   onToggle?: (item: Todo) => void;
   onUpdate?: (item: UpdateDto) => void;
@@ -22,14 +25,7 @@ type ItemProps = {
   isOverlay?: boolean;
 };
 
-export function Item({
-  item,
-  onDelete,
-  onToggle,
-  listeners,
-  isOverlay = false,
-  onUpdate
-}: ItemProps) {
+export function Item({ item, onArchive, onDelete, onToggle, listeners, isOverlay = false, onUpdate }: ItemProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [title, setTitle] = useState(item.title);
 
@@ -40,8 +36,7 @@ export function Item({
   const handleBlur = () => {
     setIsEditing(false);
     if (title.trim() !== item.title) {
-      console.log(item.id);
-      onUpdate?.({id: item.id, title: title.trim()});
+      onUpdate?.({ id: item.id, title: title.trim() });
     }
   };
 
@@ -89,7 +84,7 @@ export function Item({
           {item.title}
         </span>
       )}
-
+      <TodoItemMenu id={item.id} onArchive={onArchive} />
       <Button
         variant="ghost"
         size="icon"
@@ -116,12 +111,14 @@ export const SortableItem: FC<TodoItemProps> = ({ item }) => {
   const { mutate: deleteTodo } = useDeleteTodo();
   const { mutate: toggleTodo } = useToggleTodo();
   const { mutate: updateTodo } = useUpdateTodo();
+  const { mutate: archiveTodo } = useArchiveTodo();
 
   return (
     <div ref={setNodeRef} {...attributes} style={style}>
       <Item
         item={item}
         listeners={listeners}
+        onArchive={archiveTodo}
         onDelete={deleteTodo}
         onUpdate={updateTodo}
         onToggle={toggleTodo}
