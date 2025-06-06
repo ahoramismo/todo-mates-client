@@ -27,6 +27,7 @@ import { useAuth, useTodos, useReorderTodos } from '@/hooks';
 import { useQueryClient } from '@tanstack/react-query';
 import { Todo } from '@/lib/api';
 import { ThemeToggleButton } from '@/components/ThemeToggleButton';
+import { Sidebar } from '@/components/Sidebar';
 
 export default function TodoApp() {
   const queryClient = useQueryClient();
@@ -92,6 +93,7 @@ export default function TodoApp() {
           <div className="flex items-center gap-2">
             <ThemeToggleButton />
             <AuthButton />
+            <Sidebar />
           </div>
         </div>
 
