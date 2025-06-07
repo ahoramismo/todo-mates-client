@@ -47,7 +47,7 @@ export function Sidebar() {
   return (
     <Sheet>
       <SheetTrigger asChild>
-        <Button size="icon" variant="ghost">
+        <Button size="icon">
           <Menu className="w-6 h-6" />
         </Button>
       </SheetTrigger>

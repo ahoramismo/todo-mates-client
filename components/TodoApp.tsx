@@ -91,8 +91,6 @@ export default function TodoApp() {
         <div className="flex justify-between items-center">
           <h1 className="text-2xl font-bold">Todo List</h1>
           <div className="flex items-center gap-2">
-            <ThemeToggleButton />
-            <AuthButton />
             <Sidebar />
           </div>
         </div>
