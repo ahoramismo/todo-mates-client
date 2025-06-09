@@ -15,19 +15,14 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Menu, LogOut } from 'lucide-react';
 import { useTheme } from 'next-themes';
-import { useEffect, useState } from 'react';
 import { logout } from '@/lib/api';
 import { useRouter } from 'next/navigation';
+import { useLocalStorage } from '@/hooks';
 
 export function Sidebar() {
   const { setTheme, resolvedTheme } = useTheme();
-  const [confirmOnDelete, setConfirmOnDelete] = useState(false);
+  const [confirmOnDelete, setConfirmOnDelete] = useLocalStorage('confirmOnDelete', false);
   const router = useRouter();
-
-  useEffect(() => {
-    const value = localStorage.getItem('confirmOnDelete') === 'true';
-    setConfirmOnDelete(value);
-  }, []);
 
   const toggleTheme = () => {
     setTheme(resolvedTheme === 'dark' ? 'light' : 'dark');
@@ -36,7 +31,6 @@ export function Sidebar() {
   const toggleConfirmDelete = () => {
     const next = !confirmOnDelete;
     setConfirmOnDelete(next);
-    localStorage.setItem('confirmOnDelete', String(next));
   };
 
   const handleLogout = async () => {
