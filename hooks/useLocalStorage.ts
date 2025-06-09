@@ -6,36 +6,31 @@ import { useState, useEffect } from 'react';
  * @param initialValue The initial value
  * @returns A stateful value and a function to update it
  */
-export const useLocalStorage = <T>(
-  key: string,
-  initialValue: T
-): [T, (value: T) => void] => {
-  // Get from local storage then parse stored json or return initialValue
+export const useLocalStorage = <T>(key: string, initialValue: T): [T, (value: T) => void] => {
   const readValue = (): T => {
-    // SSR Next.js check
     if (typeof window === 'undefined') {
       return initialValue;
     }
 
     try {
       const item = window.localStorage.getItem(key);
-      return item ? (JSON.parse(item) as T) : initialValue;
+      if (item === null) {
+        // Write the initialValue to localStorage
+        window.localStorage.setItem(key, JSON.stringify(initialValue));
+        return initialValue;
+      }
+      return JSON.parse(item) as T;
     } catch (error) {
       console.warn(`Error reading localStorage key "${key}":`, error);
       return initialValue;
     }
   };
 
-  // State to store our value
   const [storedValue, setStoredValue] = useState<T>(readValue);
 
-  // Return a wrapped version of useState's setter function that persists the new value to localStorage
   const setValue = (value: T) => {
     try {
-      // Save state
       setStoredValue(value);
-
-      // Save to local storage
       if (typeof window !== 'undefined') {
         window.localStorage.setItem(key, JSON.stringify(value));
       }
@@ -44,7 +39,6 @@ export const useLocalStorage = <T>(
     }
   };
 
-  // Listen for changes to this localStorage key in other tabs/windows
   useEffect(() => {
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === key && e.newValue) {
@@ -52,9 +46,7 @@ export const useLocalStorage = <T>(
       }
     };
 
-    // Listen for storage events
     window.addEventListener('storage', handleStorageChange);
-
     return () => {
       window.removeEventListener('storage', handleStorageChange);
     };
