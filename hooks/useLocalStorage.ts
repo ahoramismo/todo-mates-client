@@ -1,25 +1,11 @@
 import { useState, useEffect } from 'react';
 
-/**
- * Custom hook for managing state with localStorage
- * @param key The localStorage key
- * @param initialValue The initial value
- * @returns A stateful value and a function to update it
- */
-export const useLocalStorage = <T>(key: string, initialValue: T): [T, (value: T) => void] => {
+export function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T) => void] {
   const readValue = (): T => {
-    if (typeof window === 'undefined') {
-      return initialValue;
-    }
-
+    if (typeof window === 'undefined') return initialValue;
     try {
       const item = window.localStorage.getItem(key);
-      if (item === null) {
-        // Write the initialValue to localStorage
-        window.localStorage.setItem(key, JSON.stringify(initialValue));
-        return initialValue;
-      }
-      return JSON.parse(item) as T;
+      return item ? JSON.parse(item) : initialValue;
     } catch (error) {
       console.warn(`Error reading localStorage key "${key}":`, error);
       return initialValue;
@@ -31,26 +17,37 @@ export const useLocalStorage = <T>(key: string, initialValue: T): [T, (value: T)
   const setValue = (value: T) => {
     try {
       setStoredValue(value);
-      if (typeof window !== 'undefined') {
-        window.localStorage.setItem(key, JSON.stringify(value));
-      }
+      window.localStorage.setItem(key, JSON.stringify(value));
+
+      // Dispatch custom event for same-tab updates
+      window.dispatchEvent(new CustomEvent('local-storage-update', { detail: { key, value } }));
     } catch (error) {
       console.warn(`Error setting localStorage key "${key}":`, error);
     }
   };
 
   useEffect(() => {
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === key && e.newValue) {
-        setStoredValue(JSON.parse(e.newValue) as T);
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key === key) {
+        setStoredValue(event.newValue ? JSON.parse(event.newValue) : initialValue);
       }
     };
 
-    window.addEventListener('storage', handleStorageChange);
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
+    const handleCustomEvent = (event: Event) => {
+      const customEvent = event as CustomEvent<{ key: string; value: T }>;
+      if (customEvent.detail.key === key) {
+        setStoredValue(customEvent.detail.value);
+      }
     };
-  }, [key]);
+
+    window.addEventListener('storage', handleStorage);
+    window.addEventListener('local-storage-update', handleCustomEvent);
+
+    return () => {
+      window.removeEventListener('storage', handleStorage);
+      window.removeEventListener('local-storage-update', handleCustomEvent);
+    };
+  }, [initialValue, key]);
 
   return [storedValue, setValue];
-};
+}
