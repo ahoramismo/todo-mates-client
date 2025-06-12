@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import AuthButton from '@/components/AuthButton';
 import TodoForm from '@/components/TodoForm';
 
 import {
@@ -26,7 +25,6 @@ import { Item, SortableItem } from '@/components/SortableItem';
 import { useAuth, useTodos, useReorderTodos } from '@/hooks';
 import { useQueryClient } from '@tanstack/react-query';
 import { Todo } from '@/lib/api';
-import { ThemeToggleButton } from '@/components/ThemeToggleButton';
 import { Sidebar } from '@/components/Sidebar';
 
 export default function TodoApp() {

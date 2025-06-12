@@ -2,7 +2,7 @@ import { FC, useState } from 'react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { GripVertical, Trash2 } from 'lucide-react';
+import { GripVertical } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Todo, UpdateDto } from '@/lib/api';
 import { useDeleteTodo, useToggleTodo, useUpdateTodo } from '@/hooks';
@@ -10,6 +10,7 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { TodoItemMenu } from '@/components/TodoItemMenu';
 import { useArchiveTodo } from '@/hooks/useArchiveTodo';
+import { DeleteButton } from '@/components/DeleteButton';
 
 type TodoItemProps = {
   item: Todo;
@@ -85,14 +86,7 @@ export function Item({ item, onArchive, onDelete, onToggle, listeners, isOverlay
         </span>
       )}
       <TodoItemMenu id={item.id} onArchive={onArchive} />
-      <Button
-        variant="ghost"
-        size="icon"
-        onClick={() => onDelete?.(item.id)}
-        className="h-6 w-6 p-0 text-red-500 hover:text-red-600"
-      >
-        <Trash2 className="h-4 w-4" />
-      </Button>
+      <DeleteButton itemId={item.id} onDelete={onDelete} />
     </div>
   );
 }
